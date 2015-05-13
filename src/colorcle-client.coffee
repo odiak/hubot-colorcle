@@ -1,4 +1,4 @@
-EventEmitter = require 'events'
+{EventEmitter} = require 'events'
 request = require 'superagent'
 
 {client: WebSocketClient} = require 'websocket'
@@ -25,6 +25,7 @@ class ColorcleClient extends EventEmitter
         data: {}
 
   connect: ->
+
     request
       .get "#{@httpProtocol}://#{@host}/api/accounts/my_info"
       .set 'Authorization', @token
