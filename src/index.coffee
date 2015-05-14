@@ -13,20 +13,22 @@ TOKEN = process.env.COLORCLE_TOKEN
 class ColorcleBot extends Adapter
 
   constructor: (@robot) ->
-    @robot.logger.info 'Constructor'
+    @logger = @robot.logger
+    @logger.info 'Constructor'
 
   send: (envelope, strings...) ->
-    @robot.logger.info "Send"
+    @logger.info 'Outgoing message:\n', envelope.user, strings
+
     for string in strings
       @client.send 'messages.create',
         message_room_id: envelope.room
         text: string
 
   reply: (envelope, strings...) ->
-    @robot.logger.info "Reply"
+    @logger.info "Reply"
 
   run: ->
-    @robot.logger.info "Run!!"
+    @logger.info "Run"
     @emit "connected"
 
     @client = new ColorcleClient
@@ -38,6 +40,8 @@ class ColorcleBot extends Adapter
 
     @client.on 'messages.created', ({data: message}) =>
       return if message.author_account.id == @client.accountId
+
+      @logger.info 'Incoming message:\n', message
 
       user = @robot.brain.userForId message.author_account.id,
         name: message.author_account.name
