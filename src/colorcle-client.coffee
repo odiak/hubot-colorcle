@@ -1,5 +1,6 @@
 {EventEmitter} = require 'events'
 request = require 'superagent'
+Log = require 'log'
 
 {client: WebSocketClient} = require 'websocket'
 
@@ -20,6 +21,8 @@ class ColorcleClient extends EventEmitter
     @wsProtocol = if @secure then 'wss' else 'ws'
     @httpProtocol = if @secure then 'https' else 'http'
 
+    @logger = new Log options.logLebel or process.env.HUBOT_LOG_LEVEL or 'info'
+
     @on 'websocket_rails.ping', =>
       @send 'websocket_rails.pong',
         id: Math.random() * 100000 | 0,
@@ -37,19 +40,19 @@ class ColorcleClient extends EventEmitter
     @ws = new WebSocketClient
 
     @ws.on 'connectFailed', (error) =>
-      console.log 'Failed to connect:', error
+      @logger.info 'Failed to connect:', error
       @reconnect()
 
     @ws.on 'connect', (@conn) =>
-      console.log 'Connected'
+      @logger.info 'Connected'
 
       @send 'auth', auth_token: @token
 
       @conn.on 'error', (error) =>
-        console.log 'Connection Error:', error
+        @logger.info 'Error:', error
 
       @conn.on 'close', =>
-        console.log 'Closed'
+        @logger.info 'Disconnected'
         @reconnect()
 
       @conn.on 'message', (message) =>
@@ -58,7 +61,6 @@ class ColorcleClient extends EventEmitter
         dataList = JSON.parse message.utf8Data
         for data in dataList
           [type, body] = data
-          console.log 'Receive:', type, body
           @emit type, body
 
     @uri = "#{@wsProtocol}://#{@host}/websocket"
@@ -66,8 +68,6 @@ class ColorcleClient extends EventEmitter
 
   send: (type, data) ->
     return unless @conn
-
-    console.log 'Send:', type, data
 
     @conn.sendUTF JSON.stringify [type, {
       id: genId()
@@ -78,7 +78,7 @@ class ColorcleClient extends EventEmitter
     @conn = null
     @_reconnection or= 0
     setTimeout =>
-      console.log 'Trying to re-connect...'
+      @logger.info 'Trying to re-connect...'
       @connect()
     , @RETRY_INTERVAL
 

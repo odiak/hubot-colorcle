@@ -15,6 +15,7 @@
     "coffee-script": ">=1.2.0"
   },
   "dependencies": {
+    "log": "^1.4.0",
     "superagent": "^1.2.0",
     "websocket": "^1.0.18"
   }
